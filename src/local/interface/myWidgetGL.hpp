@@ -37,9 +37,6 @@ public:
     /** Load a texture given by its filename */
     GLuint load_texture_file(std::string const& filename);
 
-    /** All the content of the 3D scene */
-    scene scene_3d;
-
 protected:
 
     /** Setup the OpenGL rendering mode */
@@ -76,6 +73,9 @@ private:
 
     /** The navigator storing the camera and window information */
     cpe::navigator_tool nav;
+
+    /** All the content of the 3D scene */
+    scene scene_3d;
 
     /** Enable/Disable the drawing of the 3D scene*/
     bool draw_state;

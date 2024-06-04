@@ -63,13 +63,8 @@ void myWidgetGL::mouseMoveEvent(QMouseEvent *event)
     int const x=event->x();
     int const y=event->y();
 
-#if defined(__APPLE__)
-    bool const ctrl_pressed  = (event->modifiers() & Qt::MetaModifier);
-#else
-    bool const ctrl_pressed  = (event->modifiers() & Qt::ControlModifier);
-#endif
-    bool const shift_pressed = (event->modifiers() & Qt::ShiftModifier);
-    //bool const left_click = (event->button() & Qt::LeftButton);
+    int const ctrl_pressed  = (event->modifiers() & Qt::ControlModifier);
+    int const shift_pressed = (event->modifiers() & Qt::ShiftModifier);
 
     // Left button controls the rotation
     if (!ctrl_pressed && !shift_pressed && (event->buttons() & Qt::LeftButton) )

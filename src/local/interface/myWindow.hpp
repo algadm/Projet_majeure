@@ -36,7 +36,7 @@ private slots:
     void action_draw();
     /** Set the Wireframe mode for the meshes */
     void action_wireframe();
-    
+
 private:
 
     /** Layout for the Window */

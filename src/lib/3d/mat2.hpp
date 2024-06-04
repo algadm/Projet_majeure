@@ -100,16 +100,6 @@ private:
 /** Matrix transpose */
 mat2 transposed(mat2 const& m);
 
-/** Matrix determinant */
-float det(mat2 const& m);
-
-/** Matrix inverse */
-mat2 inverse(mat2 const& m);
-
-/** Eigenvalues */
-vec2 eigenvalue(mat2 const& m);
-
-
 
 // ********************************************* //
 //  Math operator

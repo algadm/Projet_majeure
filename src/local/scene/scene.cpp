@@ -3,69 +3,41 @@
 #include <GL/glew.h>
 
 #include "scene.hpp"
-#include "../../lib/3d/mat2.hpp"
 
 #include "../../lib/opengl/glutils.hpp"
-
 #include "../../lib/perlin/perlin.hpp"
 #include "../../lib/interface/camera_matrices.hpp"
-
 #include "../interface/myWidgetGL.hpp"
+#include "../../lib/mesh/mesh_io.hpp"
 
 #include <cmath>
-
 #include <string>
 #include <sstream>
-#include "../../lib/mesh/mesh_io.hpp"
 
 
 using namespace cpe;
 
 
-void scene::build_surface()
-{
-    int Nu = 200;
-    int Nv = 200;
-
-    surface.set_plane_xy_unit(Nu,Nv);
-
-    // float const u_min = -2.0f;
-    // float const u_max = 2.0f;
-
-    // // Precompute step sizes
-    // float const du = (u_max - u_min) / (Nu - 1);
-    // float const dv = 2*M_PI / (Nv - 1);
-    
-    // for(int ku=0 ; ku<Nu ; ++ku)
-    // {
-    //     for(int kv=0 ; kv<Nv ; ++kv)
-    //     {
-    //         float const u = u_min + static_cast<float>(ku)/(Nu-1) * (u_max-u_min);
-    //         float const v = 2*M_PI * static_cast<float>(kv)/(Nv-1) - M_PI;
-
-    //         float const x = cos(v)/cosh(u);
-    //         float const y = sin(v)/cosh(u);
-    //         float const z = (u-tanh(u));
-
-    //         surface.vertex(ku,kv) = {x,y,z};
-    //         surface.color(ku,kv) = {x,y,z};
-    //     }
-    // }
-}
-
 void scene::load_scene()
 {
-    load_common_data();
+
+    //*****************************************//
+    // Preload default structure               //
+    //*****************************************//
+    texture_default = load_texture_file("data/white.jpg");
+    shader_program_id = read_shader("shaders/shader_mesh.vert",
+                                    "shaders/shader_mesh.frag");
 
 
-    build_surface();
-
-
-    surface.fill_normal();
-    surface.fill_empty_field_by_default();
-
-    surface_opengl.fill_vbo(surface);
-
+    //*****************************************//
+    // OBJ Mesh                                //
+    //*****************************************//
+    mesh_ground = load_mesh_file("data/gebco_08_rev_elev_A1_grey_geo.obj");
+    mesh_ground.transform_apply_auto_scale_and_center();
+    // mesh_ground.transform_apply_rotation({1.0f,0.0f,0.0f},-M_PI/2.0f);
+    mesh_ground.transform_apply_rotation({0.0f,0.0f,1.0f}, M_PI/2.0f);
+    mesh_ground.fill_color_xyz();
+    mesh_ground_opengl.fill_vbo(mesh_ground);
 }
 
 void scene::draw_scene()
@@ -82,8 +54,9 @@ void scene::draw_scene()
     glUniformMatrix4fv(get_uni_loc(shader_program_id,"normal_matrix"),1,false,cam.normal.pointer());           PRINT_OPENGL_ERROR();
 
 
-    glBindTexture(GL_TEXTURE_2D,texture_default);  PRINT_OPENGL_ERROR();
-    surface_opengl.draw();
+    //Draw the meshes
+    mesh_ground_opengl.draw();
+
 }
 
 
@@ -102,11 +75,58 @@ void scene::set_widget(myWidgetGL* widget_param)
     pwidget=widget_param;
 }
 
-
-void scene::load_common_data()
+void scene::flat_surface(float xmin,float xmax, float zmin, float zmax, int Nu, int Nv)
 {
-    texture_default=load_texture_file("data/white.jpg");
-    shader_program_id = read_shader("shaders/shader_mesh.vert",
-                                    "shaders/shader_mesh.frag"); PRINT_OPENGL_ERROR();
+    const float dx = (xmax-xmin)/static_cast<float>(Nu-1);
+    const float dz = (zmax-zmin)/static_cast<float>(Nv-1);
+
+    for (int kv = 0; kv < Nv; kv++) {
+        for (int ku = 0; ku < Nu; ku++) {
+            mesh_ground.add_vertex( {xmin + ku*dx,-0.25f,zmin + kv*dz} );
+        }
+    }
+    for (int kv = 0; kv < Nv - 1; kv++) {
+        for (int ku = 0; ku < Nu - 1; ku++) {
+            mesh_ground.add_triangle_index({ku+kv*Nu,ku+1+kv*Nu,ku+(kv+1)*Nu});
+            mesh_ground.add_triangle_index({ku+1+kv*Nu,ku+1+(kv+1)*Nu,ku+(kv+1)*Nu});
+        }
+    }
 }
 
+void scene::trigo_surface(float xmin,float xmax, float zmin, float zmax, int Nu, int Nv)
+{
+    const float dx = (xmax-xmin)/static_cast<float>(Nu-1);
+    const float dz = (zmax-zmin)/static_cast<float>(Nv-1);
+
+    for (int kv = 0; kv < Nv; kv++) {
+        for (int ku = 0; ku < Nu; ku++) {
+            mesh_ground.add_vertex( {xmin + ku*dx,sin(ku*dx)+cos(kv*dz)-1.25f,zmin + kv*dz} );
+        }
+    }
+    for (int kv = 0; kv < Nv - 1; kv++) {
+        for (int ku = 0; ku < Nu - 1; ku++) {
+            mesh_ground.add_triangle_index({ku+kv*Nu,ku+1+kv*Nu,ku+(kv+1)*Nu});
+            mesh_ground.add_triangle_index({ku+1+kv*Nu,ku+1+(kv+1)*Nu,ku+(kv+1)*Nu});
+        }
+    }
+}
+
+void scene::perlin_surface(float xmin,float xmax, float zmin, float zmax, int Nu, int Nv)
+{
+    const float dx = (xmax-xmin)/static_cast<float>(Nu-1);
+    const float dz = (zmax-zmin)/static_cast<float>(Nv-1);
+    perlin p = perlin(8,0.5);
+
+    for (int kv = 0; kv < Nv; kv++) {
+        for (int ku = 0; ku < Nu; ku++) {
+            vec2 point = {xmin + ku*dx,zmin + kv*dz};
+            mesh_ground.add_vertex( {point.x(),0.1f*p(point),point.y()} );
+        }
+    }
+    for (int kv = 0; kv < Nv - 1; kv++) {
+        for (int ku = 0; ku < Nu - 1; ku++) {
+            mesh_ground.add_triangle_index({ku+kv*Nu,ku+1+kv*Nu,ku+(kv+1)*Nu});
+            mesh_ground.add_triangle_index({ku+1+kv*Nu,ku+1+(kv+1)*Nu,ku+(kv+1)*Nu});
+        }
+    }
+}

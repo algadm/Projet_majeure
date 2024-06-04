@@ -236,32 +236,4 @@ mat2 transposed(mat2 const& m)
                 m(0,1),m(1,1));
 }
 
-float det(mat2 const& m)
-{
-    return m(0,0)*m(1,1)-m(0,1)*m(1,0);
-}
-
-mat2 inverse(mat2 const& m)
-{
-    float const d = det(m);
-
-    if( std::abs(d)<1e-7f )
-        std::cout<<"Waning: Matrix non invertible, det="<<d<<std::endl;
-    // ASSERT_CPE(std::abs(d)>1e-6f,"Non invertible matrix");
-
-    return mat2(m(1,1),-m(0,1),
-                -m(1,0),m(0,0))/d;
-}
-
-vec2 eigenvalue(mat2 const& m)
-{
-    float const tr = m(0,0)+m(1,1);
-    float const d = det(m);
-
-    float const discriminant=tr*tr-4*d;
-    float const sqrt_discriminant=std::sqrt(discriminant);
-
-    return { 0.5f*(tr+sqrt_discriminant) , 0.5f*(tr-sqrt_discriminant) };
-}
-
 }

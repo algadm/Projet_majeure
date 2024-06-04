@@ -35,7 +35,7 @@ vec3 const& mesh::color(int const index) const           {return mesh_basic::col
 vec3& mesh::color(int const index)                       {return mesh_basic::color(index);}
 vec2 const& mesh::texture_coord(int const index) const   {return mesh_basic::texture_coord(index);}
 vec2& mesh::texture_coord(int const index)               {return mesh_basic::texture_coord(index);}
-triangle_index const& mesh::connectivity(int const index) const {return mesh_basic::connectivity(index);}
+triangle_index mesh::connectivity(int const index) const {return mesh_basic::connectivity(index);}
 triangle_index& mesh::connectivity(int const index)      {return mesh_basic::connectivity(index);}
 
 void mesh::add_vertex(vec3 const& v)                     {mesh_basic::add_vertex(v);}

@@ -46,7 +46,7 @@ public:
     vec3& color(int index);
     vec2 const& texture_coord(int index) const;
     vec2& texture_coord(int index);
-    triangle_index const& connectivity(int index) const;
+    triangle_index connectivity(int index) const;
     triangle_index& connectivity(int index);
 
     void add_vertex(vec3 const& v);

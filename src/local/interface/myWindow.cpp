@@ -33,6 +33,7 @@ myWindow::myWindow(QWidget *parent)
     connect(ui->quit,SIGNAL(clicked()),this,SLOT(action_quit()));
     connect(ui->draw,SIGNAL(clicked()),this,SLOT(action_draw()));
     connect(ui->wireframe,SIGNAL(clicked()),this,SLOT(action_wireframe()));
+
 }
 
 myWindow::~myWindow()
@@ -53,3 +54,4 @@ void myWindow::action_wireframe()
     bool const state_wireframe=ui->wireframe->isChecked();
     glWidget->wireframe(state_wireframe);
 }
+

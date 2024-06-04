@@ -346,7 +346,6 @@ bool mesh_basic::valid_mesh() const
         }
     }
 
-/*
     //color components should be in [0,1]
     for(int k=0,N=size_color();k<N;++k)
     {
@@ -357,7 +356,6 @@ bool mesh_basic::valid_mesh() const
             return false;
         }
     }
-    */
 
     //all triangle indices should be in the vertex list with non degenerated triangle
     int const N_vertex=size_vertex();

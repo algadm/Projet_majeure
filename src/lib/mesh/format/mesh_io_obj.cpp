@@ -190,6 +190,8 @@ mesh load_mesh_file_obj(const std::string& filename)
     bool is_normal=obj.data_normal.size()>0 && obj.data_face_normal.size()>0;
     bool is_texture=obj.data_texture.size()>0 && obj.data_face_texture.size()>0;
 
+
+
     if(is_vertex && !is_normal && !is_texture)
     {
         int const N_face=obj.data_face_vertex.size();
@@ -208,7 +210,7 @@ mesh load_mesh_file_obj(const std::string& filename)
             mesh_loaded.add_vertex(obj.data_vertex[k_vertex]);
     }
 
-    if(is_vertex && !is_normal && is_texture)
+    if((is_vertex && !is_normal && is_texture) || (is_vertex && is_normal && is_texture) )//note: normal are not read
     {
         std::vector<vec3> data_vertex;
         std::vector<vec2> data_texture;
@@ -266,6 +268,9 @@ mesh load_mesh_file_obj(const std::string& filename)
 
         }
     }
+
+
+
 
     mesh_loaded.fill_empty_field_by_default();
     ASSERT_CPE(mesh_loaded.valid_mesh(),"Mesh is invalid");
