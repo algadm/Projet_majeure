@@ -1,17 +1,17 @@
 
-/** TP 4ETI - CPE Lyon - 2015/2016 */
+/** TP 4ETI - CPE Lyon - 2013/2014 */
 
 #pragma once
 
 #ifndef SCENE_HPP
 #define SCENE_HPP
 
-//#include "GL/gl.h"
+//#include <GL/gl.h>
 #include <GL/glew.h>
 
 #include "../../lib/3d/mat3.hpp"
 #include "../../lib/3d/vec3.hpp"
-#include "../../lib/mesh/mesh.hpp"
+#include "../../lib/mesh/mesh_parametric.hpp"
 #include "../../lib/opengl/mesh_opengl.hpp"
 #include "../../lib/interface/camera_matrices.hpp"
 
@@ -26,6 +26,8 @@ public:
 
     scene();
 
+    
+    void build_surface();
 
 
     /** \brief Method called only once at the beginning (load off files ...) */
@@ -37,15 +39,8 @@ public:
     /** Set the pointer to the parent Widget */
     void set_widget(myWidgetGL* widget_param);
 
-    /** Generalise the creation of a flat surface */
-    void flat_surface(float xmin,float xmax, float zmin, float zmax, int Nu, int Nv);
-
-
-    /** Generalise the creation of a trigonometric surface */
-    void trigo_surface(float xmin,float xmax, float zmin, float zmax, int Nu, int Nv);
-
-    /** Generalise the creation of a surface with Perlin noises */
-    void perlin_surface(float xmin,float xmax, float zmin, float zmax, int Nu, int Nv);
+    /** Load basic data for the scene */
+    void load_common_data();
 
 
 private:
@@ -63,18 +58,8 @@ private:
     GLuint shader_program_id;
 
 
-    // Data of the scene
-    cpe::mesh mesh_dinosaur;
-    cpe::mesh_opengl mesh_dinosaur_opengl;
-    GLuint texture_dinosaur;
-
-    cpe::mesh mesh_camel;
-    cpe::mesh_opengl mesh_camel_opengl;
-
-    cpe::mesh mesh_ground;
-    cpe::mesh_opengl mesh_ground_opengl;
-
-
+    cpe::mesh_parametric surface;
+    cpe::mesh_opengl surface_opengl;
 
 
 };

@@ -3,41 +3,82 @@
 #include <GL/glew.h>
 
 #include "scene.hpp"
+#include "../../lib/3d/mat2.hpp"
 
 #include "../../lib/opengl/glutils.hpp"
+
 #include "../../lib/perlin/perlin.hpp"
 #include "../../lib/interface/camera_matrices.hpp"
+
 #include "../interface/myWidgetGL.hpp"
-#include "../../lib/mesh/mesh_io.hpp"
 
 #include <cmath>
+
 #include <string>
 #include <sstream>
+#include <fstream>
+#include "../../lib/mesh/mesh_io.hpp"
 
 
 using namespace cpe;
 
 
+void scene::build_surface()
+{
+    int const Nu = 571;
+    int const Nv = 346;
+
+    surface.set_plane_xy_unit(Nu,Nv);
+
+    std::ifstream file("data/heightmap.bin", std::ios::binary);
+    if (!file) {
+        std::cerr << "Error opening file!" << std::endl;
+        // continue;
+    }
+
+    // Read the data into a vector
+    std::vector<uint16_t> heightmap(Nu * Nv);
+    file.read(reinterpret_cast<char*>(heightmap.data()), heightmap.size() * sizeof(uint16_t));
+
+    if (!file) {
+        std::cerr << "Error reading file!" << std::endl;
+        // continue;
+    }
+
+    file.close();
+
+    // Process the heightmap data
+    // For example, print the first few values
+    for (int ku = 0; ku < Nu; ++ku) {
+        for (int kv = 0; kv < Nv; ++kv) {
+            // Calculate the index in the heightmap array
+            int index = kv * Nu + ku;
+
+            // Get the height value
+            uint16_t height = heightmap[index];
+
+            float const x = ku;
+            float const y = kv;
+            float const z = .1f*height;
+            surface.vertex(ku, kv) = {x, y, z};
+        }
+    }
+    surface.transform_apply_auto_scale_and_center();
+}
+
 void scene::load_scene()
 {
-
-    //*****************************************//
-    // Preload default structure               //
-    //*****************************************//
-    texture_default = load_texture_file("data/white.jpg");
-    shader_program_id = read_shader("shaders/shader_mesh.vert",
-                                    "shaders/shader_mesh.frag");
+    load_common_data();
 
 
-    //*****************************************//
-    // OBJ Mesh                                //
-    //*****************************************//
-    mesh_ground = load_mesh_file("data/gebco_08_rev_elev_A1_grey_geo.obj");
-    mesh_ground.transform_apply_auto_scale_and_center();
-    // mesh_ground.transform_apply_rotation({1.0f,0.0f,0.0f},-M_PI/2.0f);
-    mesh_ground.transform_apply_rotation({0.0f,0.0f,1.0f}, M_PI/2.0f);
-    mesh_ground.fill_color_xyz();
-    mesh_ground_opengl.fill_vbo(mesh_ground);
+    build_surface();
+
+
+    surface.fill_normal();
+    surface.fill_empty_field_by_default();
+
+    surface_opengl.fill_vbo(surface);
+
 }
 
 void scene::draw_scene()
@@ -54,9 +95,8 @@ void scene::draw_scene()
     glUniformMatrix4fv(get_uni_loc(shader_program_id,"normal_matrix"),1,false,cam.normal.pointer());           PRINT_OPENGL_ERROR();
 
 
-    //Draw the meshes
-    mesh_ground_opengl.draw();
-
+    glBindTexture(GL_TEXTURE_2D,texture_default);  PRINT_OPENGL_ERROR();
+    surface_opengl.draw();
 }
 
 
@@ -75,58 +115,11 @@ void scene::set_widget(myWidgetGL* widget_param)
     pwidget=widget_param;
 }
 
-void scene::flat_surface(float xmin,float xmax, float zmin, float zmax, int Nu, int Nv)
-{
-    const float dx = (xmax-xmin)/static_cast<float>(Nu-1);
-    const float dz = (zmax-zmin)/static_cast<float>(Nv-1);
 
-    for (int kv = 0; kv < Nv; kv++) {
-        for (int ku = 0; ku < Nu; ku++) {
-            mesh_ground.add_vertex( {xmin + ku*dx,-0.25f,zmin + kv*dz} );
-        }
-    }
-    for (int kv = 0; kv < Nv - 1; kv++) {
-        for (int ku = 0; ku < Nu - 1; ku++) {
-            mesh_ground.add_triangle_index({ku+kv*Nu,ku+1+kv*Nu,ku+(kv+1)*Nu});
-            mesh_ground.add_triangle_index({ku+1+kv*Nu,ku+1+(kv+1)*Nu,ku+(kv+1)*Nu});
-        }
-    }
+void scene::load_common_data()
+{
+    texture_default=load_texture_file("data/white.jpg");
+    shader_program_id = read_shader("shaders/shader_mesh.vert",
+                                    "shaders/shader_mesh.frag"); PRINT_OPENGL_ERROR();
 }
 
-void scene::trigo_surface(float xmin,float xmax, float zmin, float zmax, int Nu, int Nv)
-{
-    const float dx = (xmax-xmin)/static_cast<float>(Nu-1);
-    const float dz = (zmax-zmin)/static_cast<float>(Nv-1);
-
-    for (int kv = 0; kv < Nv; kv++) {
-        for (int ku = 0; ku < Nu; ku++) {
-            mesh_ground.add_vertex( {xmin + ku*dx,sin(ku*dx)+cos(kv*dz)-1.25f,zmin + kv*dz} );
-        }
-    }
-    for (int kv = 0; kv < Nv - 1; kv++) {
-        for (int ku = 0; ku < Nu - 1; ku++) {
-            mesh_ground.add_triangle_index({ku+kv*Nu,ku+1+kv*Nu,ku+(kv+1)*Nu});
-            mesh_ground.add_triangle_index({ku+1+kv*Nu,ku+1+(kv+1)*Nu,ku+(kv+1)*Nu});
-        }
-    }
-}
-
-void scene::perlin_surface(float xmin,float xmax, float zmin, float zmax, int Nu, int Nv)
-{
-    const float dx = (xmax-xmin)/static_cast<float>(Nu-1);
-    const float dz = (zmax-zmin)/static_cast<float>(Nv-1);
-    perlin p = perlin(8,0.5);
-
-    for (int kv = 0; kv < Nv; kv++) {
-        for (int ku = 0; ku < Nu; ku++) {
-            vec2 point = {xmin + ku*dx,zmin + kv*dz};
-            mesh_ground.add_vertex( {point.x(),0.1f*p(point),point.y()} );
-        }
-    }
-    for (int kv = 0; kv < Nv - 1; kv++) {
-        for (int ku = 0; ku < Nu - 1; ku++) {
-            mesh_ground.add_triangle_index({ku+kv*Nu,ku+1+kv*Nu,ku+(kv+1)*Nu});
-            mesh_ground.add_triangle_index({ku+1+kv*Nu,ku+1+(kv+1)*Nu,ku+(kv+1)*Nu});
-        }
-    }
-}
