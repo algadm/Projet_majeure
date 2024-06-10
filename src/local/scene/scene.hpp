@@ -42,6 +42,15 @@ public:
     /** Load basic data for the scene */
     void load_common_data();
 
+    /** Displays the elements of the A* algorithm */
+    void display();
+
+    /** Displays the color of the town */
+    void town_color(int const x, int const y, float const R, float const G, float const B);
+
+    /** Displays the road */
+    void road_color(int const x, int const y);
+
 
 private:
 
