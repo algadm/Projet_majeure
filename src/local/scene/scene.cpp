@@ -23,11 +23,8 @@
 using namespace cpe;
 
 
-void scene::build_surface()
+void scene::build_surface(int const Nu, int const Nv)
 {
-    // World size
-    int const Nu = 571;
-    int const Nv = 346;
     surface.set_plane_xy_unit(Nu,Nv);
 
     // Read binary file
@@ -49,6 +46,8 @@ void scene::build_surface()
             int index = kv * Nu + ku;
             int height = heightmap[index];
 
+            floor_color(ku,kv,height);
+
             float const x = kv;
             float const y = ku;
             float const z = .1f*height;
@@ -60,7 +59,7 @@ void scene::build_surface()
 
 void scene::display()
 {
-    town_color(40, 70, 1.0f, 0.5f, 0.0f);
+    town_color(40, 70, 1.0f, 0.0f, 1.0f);
     town_color(473, 257, 0.0f, 1.0f, 1.0f);
     road_color(40,70);
     road_color(40,71);
@@ -97,12 +96,39 @@ void scene::road_color(int const x, int const y)
     surface.color(x,y) = {0.0f, 0.0f, 0.0f};
 }
 
+void scene::floor_color(int const ku, int const kv, int const height)
+{
+    if (height <= 200)
+        surface.color(ku,kv) = {0.0f, 0.6f, 0.0f};
+
+    if (height <= 240 && height > 200)
+        surface.color(ku,kv) = {0.0f, 0.7f, 0.0f};
+
+    if (height <= 290 && height > 240)
+        surface.color(ku,kv) = {0.8f, 0.8f, 0.0f};
+
+    if (height <= 320 && height > 290)
+        surface.color(ku,kv) = {0.8f, 0.7f, 0.0f};
+
+    if (height <= 360 && height > 320)
+        surface.color(ku,kv) = {0.8f, 0.5f, 0.0f};
+
+    if (height <= 430 && height > 360)
+        surface.color(ku,kv) = {0.8f, 0.0f, 0.0f};
+
+    if (height > 430)
+        surface.color(ku,kv) = {0.8f, 0.8f, 0.8f};
+}
+
 void scene::load_scene()
 {
     load_common_data();
 
+    // World size
+    int const Nu = 571;
+    int const Nv = 346;
 
-    build_surface();
+    build_surface(Nu,Nv);
 
     display();
 

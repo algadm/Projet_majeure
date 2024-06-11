@@ -27,7 +27,7 @@ public:
     scene();
 
     
-    void build_surface();
+    void build_surface(int const Nu, int const Nv);
 
 
     /** \brief Method called only once at the beginning (load off files ...) */
@@ -50,6 +50,9 @@ public:
 
     /** Displays the road */
     void road_color(int const x, int const y);
+
+    /** Displays the ground */
+    void floor_color(int const ku, int const kv, int const height);
 
 
 private:
