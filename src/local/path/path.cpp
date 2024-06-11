@@ -75,19 +75,14 @@ float path::h(ivec2 ij)
 
 
 // from ij1 to ij2
-float path::g(ivec2 ij1, ivec2 ij2)
+float path::g(ivec2 ij1, ivec2 ij2, int n, cpe::mesh_parametric surface)
 {
-    return std::sqrt(static_cast<float>((ij1[0]-ij2[0])*(ij1[0]-ij2[0]) + (ij1[1]-ij2[1])*(ij1[1]-ij2[1])));
-}
-
-// f = g + h
-float path::f(ivec2 ij1, ivec2 ij2)
-{
-    return g(ij1,ij2) + h(ij2);
+    float k = std::abs(surface.vertex(ij1[0],ij1[1]).z()-surface.vertex(ij2[0],ij2[1]).z())/distance[n];
+    return exp(k);
 }
 
 
-int path::A_star(cpe::ivec2 start,cpe::ivec2 goal)
+int path::A_star(cpe::ivec2 start,cpe::ivec2 goal,cpe::mesh_parametric surface)
 {
     std::priority_queue<std::pair<float,cpe::ivec2>> priority_q;
     float f = heuristics[start[0]*N+start[1]];
@@ -120,11 +115,11 @@ int path::A_star(cpe::ivec2 start,cpe::ivec2 goal)
         for (int n = 0; n < 16; n++) {
             cpe::ivec2 neighbor = current + mask[n];
             if (neighbor[0]>=0 && neighbor[0]<N && neighbor[1]>=0 && neighbor[1]<M) {
-                float tentative_score = g_score[current[0]*N+current[1]] + distance[n];
+                float tentative_score = g_score[current[0]*N+current[1]] + g(current,neighbor,n,surface);
                 if (tentative_score < g_score[neighbor[0]*N+neighbor[1]]) {
                     came_from[neighbor[0]*N+neighbor[1]] = current;
                     g_score[neighbor[0]*N+neighbor[1]] = tentative_score;
-                    f_score[neighbor[0]*N+neighbor[1]] = tentative_score + h(neighbor);
+                    f_score[neighbor[0]*N+neighbor[1]] = tentative_score + heuristics[neighbor[0]*N+neighbor[1]];
                     f = f_score[neighbor[0]*N+neighbor[1]];
                     p.first = f;
                     p.second = neighbor;
