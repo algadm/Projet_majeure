@@ -35,4 +35,17 @@ build
 extern
 .DS_STORE
 CMakeLists.txt
-# .gitignore
+.gitignore
+
+.cmake
+.qtc
+.qtc_clangd
+CMakeFiles
+pgm_autogen
+Testing
+cmake_install.cmake
+CMakeCache.txt
+CMakeCache.txt.prev
+CMakeLists.txt.user
+Makefile
+qtcsettings.cmake
