@@ -163,4 +163,9 @@ bool operator==(ivec2 const& v1, ivec2 const& v2)
     return (v1.x() == v2.x() && v1.y() == v2.y());
 }
 
+bool operator!=(ivec2 const& v1, ivec2 const& v2)
+{
+    return !(v1 == v2);
+}
+
 }

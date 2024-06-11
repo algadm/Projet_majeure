@@ -12,123 +12,105 @@
 #include <array>
 #include <queue>
 #include <utility>
-
-
+#include <iostream>
+#include <vector>
 
 using namespace cpe;
 
-path::path(int const n, int const m) {
-    N = n;
-    M = m;
-    for (int i = 0; i < N ; i++) {
-        for (int j = 0; j < M ; j++) {
-            heuristics.push_back(h(cpe::ivec2(i,j)));
-        }
+/** Min-heap comparator */
+struct CompareVec
+{
+    bool operator()(const std::pair<float, cpe::ivec2>& pair1, const std::pair<float, cpe::ivec2>& pair2) const
+    {
+        return pair1.first > pair2.first;
     }
-    mask = {cpe::ivec2(0,-1),cpe::ivec2(0,1),cpe::ivec2(-1,0),cpe::ivec2(1,0),
-            cpe::ivec2(-1,-1),cpe::ivec2(-1,1),cpe::ivec2(1,-1),cpe::ivec2(1,1),
-            cpe::ivec2(-1,-2),cpe::ivec2(-1,2),cpe::ivec2(1,-2),cpe::ivec2(1,2),
-            cpe::ivec2(-2,-1),cpe::ivec2(-2,1),cpe::ivec2(2,-1),cpe::ivec2(2,1)};
+};
 
-    distance = {1.0f,1.0f,1.0f,1.0f,
-        std::sqrt(2.0f),std::sqrt(2.0f),std::sqrt(2.0f),std::sqrt(2.0f),
-        std::sqrt(5.0f),std::sqrt(5.0f),std::sqrt(5.0f),std::sqrt(5.0f),
-        std::sqrt(5.0f),std::sqrt(5.0f),std::sqrt(5.0f),std::sqrt(5.0f),};
+path::path(int const n, int const m, cpe::ivec2 Start, cpe::ivec2 Goal) : N(n), M(m), start(Start), goal(Goal)
+{
+    heuristics.resize(N * M);
+    for (int i = 0; i < N; i++)
+        for (int j = 0; j < M; j++) 
+            heuristics[i * M + j] = h(cpe::ivec2(i, j));
+
+    mask = {cpe::ivec2(0, -1), cpe::ivec2(0, 1), cpe::ivec2(-1, 0), cpe::ivec2(1, 0),
+            cpe::ivec2(-1, -1), cpe::ivec2(-1, 1), cpe::ivec2(1, -1), cpe::ivec2(1, 1),
+            cpe::ivec2(-1, -2), cpe::ivec2(-1, 2), cpe::ivec2(1, -2), cpe::ivec2(1, 2),
+            cpe::ivec2(-2, -1), cpe::ivec2(-2, 1), cpe::ivec2(2, -1), cpe::ivec2(2, 1)};
+
+    distance = {1.0f, 1.0f, 1.0f, 1.0f,
+                std::sqrt(2.0f), std::sqrt(2.0f), std::sqrt(2.0f), std::sqrt(2.0f),
+                std::sqrt(5.0f), std::sqrt(5.0f), std::sqrt(5.0f), std::sqrt(5.0f),
+                std::sqrt(5.0f), std::sqrt(5.0f), std::sqrt(5.0f), std::sqrt(5.0f)};
+
+    g_score.resize(N * M, std::numeric_limits<float>::infinity());
+    f_score.resize(N * M, std::numeric_limits<float>::infinity());
 }
 
-void path::reconstruct_path(std::vector<cpe::ivec2> came_from, cpe::ivec2 current)
+void path::reconstruct_path(std::vector<cpe::ivec2>& came_from, cpe::ivec2 current)
 {
-    data.push_back(current);
-    while (current[0] != start[0] && current[1] != start[1]) {
-        current = came_from[current[0]*N+current[1]];
+    while (current != start)
+    {
         data.push_back(current);
+        current = came_from[current.x() * M + current.y()];
     }
+    data.push_back(start);
+    std::reverse(data.begin(), data.end());
 }
 
-void path::add_vertex_to_path(ivec2 ij)
+float path::h(cpe::ivec2 ij) const
 {
-    data.push_back(ij);
+    return std::sqrt(static_cast<float>((ij.x() - goal.x()) * (ij.x() - goal.x()) + (ij.y() - goal.y()) * (ij.y() - goal.y())));
 }
 
-void path::pop_last_vertex_from_path()
+float path::g(cpe::ivec2 ij1, cpe::ivec2 ij2, int n, cpe::mesh_parametric surface) const
 {
-    data.pop_back();
+    float k = std::abs(surface.vertex(ij1.x(), ij1.y()).z() - surface.vertex(ij2.x(), ij2.y()).z()) / distance[n];
+    k *= 5000.0f;
+    return k;
 }
 
-void path::set_start(cpe::ivec2 b)
+int path::A_star(cpe::mesh_parametric surface)
 {
-    start = b;
-}
+    std::priority_queue<std::pair<float, cpe::ivec2>, std::vector<std::pair<float, cpe::ivec2>>, CompareVec> priority_q;
+    std::vector<cpe::ivec2> came_from(N * M, cpe::ivec2(-1, -1));
 
-void path::set_goal(cpe::ivec2 e)
-{
-    goal = e;
-}
+    g_score[start.x() * M + start.y()] = 0;
+    f_score[start.x() * M + start.y()] = h(start);
 
+    priority_q.push({h(start), start});
 
-// Heuristic function
-float path::h(ivec2 ij)
-{
-    return std::sqrt(static_cast<float>((ij[0]-goal[0])*(ij[0]-goal[0]) + (ij[1]-goal[1])*(ij[1]-goal[1])));
-}
-
-
-
-// from ij1 to ij2
-float path::g(ivec2 ij1, ivec2 ij2, int n, cpe::mesh_parametric surface)
-{
-    float k = std::abs(surface.vertex(ij1[0],ij1[1]).z()-surface.vertex(ij2[0],ij2[1]).z())/distance[n];
-    return exp(k);
-}
-
-
-int path::A_star(cpe::ivec2 start,cpe::ivec2 goal,cpe::mesh_parametric surface)
-{
-    std::priority_queue<std::pair<float,cpe::ivec2>> priority_q;
-    float f = heuristics[start[0]*N+start[1]];
-    std::pair<float,cpe::ivec2> p;
-    p.first = f;
-    p.second = start;
-    priority_q.push(p);
-
-    std::vector<cpe::ivec2> came_from;
-    std::vector<float> g_score;
-    std::vector<float> f_score;
-    for (int i = 0; i < N*M ; i++) {
-        came_from.push_back(ivec2(-1,-1));
-        g_score.push_back(std::numeric_limits<float>::infinity());
-        f_score.push_back(std::numeric_limits<float>::infinity());
-    }
-
-    g_score[start[0]*N+start[1]] = 0;
-    f_score[start[0]*N+start[1]] = h(start);
-
-    while (priority_q.size() > 0) {
-        std::pair<float,cpe::ivec2> current_pair = priority_q.top();
+    while (!priority_q.empty())
+    {
+        auto current_pair = priority_q.top();
         cpe::ivec2 current = current_pair.second;
-        if (current == goal) {
+        priority_q.pop();
+
+        std::cout << "Current node: (" << current.x() << ", " << current.y() << ")\n";
+
+        if (current == goal)
+        {
             reconstruct_path(came_from, current);
             return 1;
         }
-        priority_q.pop();
 
-        for (int n = 0; n < 16; n++) {
+        for (int n = 0; n < mask.size(); n++)
+        {
             cpe::ivec2 neighbor = current + mask[n];
-            if (neighbor[0]>=0 && neighbor[0]<N && neighbor[1]>=0 && neighbor[1]<M) {
-                float tentative_score = g_score[current[0]*N+current[1]] + g(current,neighbor,n,surface);
-                if (tentative_score < g_score[neighbor[0]*N+neighbor[1]]) {
-                    came_from[neighbor[0]*N+neighbor[1]] = current;
-                    g_score[neighbor[0]*N+neighbor[1]] = tentative_score;
-                    f_score[neighbor[0]*N+neighbor[1]] = tentative_score + heuristics[neighbor[0]*N+neighbor[1]];
-                    f = f_score[neighbor[0]*N+neighbor[1]];
-                    p.first = f;
-                    p.second = neighbor;
-                    priority_q.push(p);
-                    }
-                }
+            if (neighbor.x() >= 0 && neighbor.x() < N && neighbor.y() >= 0 && neighbor.y() < M)
+            {
+                float tentative_g_score = g_score[current.x() * M + current.y()] + g(current, neighbor, n, surface);
+
+                if (tentative_g_score < g_score[neighbor.x() * M + neighbor.y()])
+                {
+                    came_from[neighbor.x() * M + neighbor.y()] = current;
+                    g_score[neighbor.x() * M + neighbor.y()] = tentative_g_score;
+                    float f_score_value = tentative_g_score + heuristics[neighbor.x() * M + neighbor.y()];
+                    f_score[neighbor.x() * M + neighbor.y()] = f_score_value;
+                    priority_q.push({f_score_value, neighbor});
+                } 
             }
+        }
     }
     return 0;
 }
-
-

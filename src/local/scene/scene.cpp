@@ -11,6 +11,7 @@
 #include "../../lib/interface/camera_matrices.hpp"
 
 #include "../interface/myWidgetGL.hpp"
+#include "../path/path.hpp"
 
 #include <cmath>
 
@@ -41,8 +42,10 @@ void scene::build_surface(int const Nu, int const Nv)
     file.close();
 
     // Give height to plane map
-    for (int ku = 0; ku < Nu; ++ku) {
-        for (int kv = 0; kv < Nv; ++kv) {
+    for (int ku = 0; ku < Nu; ++ku)
+    {
+        for (int kv = 0; kv < Nv; ++kv)
+        {
             int index = kv * Nu + ku;
             int height = heightmap[index];
 
@@ -57,25 +60,10 @@ void scene::build_surface(int const Nu, int const Nv)
     surface.transform_apply_auto_scale_and_center();
 }
 
-void scene::display()
+void scene::display(ivec2 const start, ivec2 const goal)
 {
-    town_color(40, 70, 1.0f, 0.0f, 1.0f);
-    town_color(473, 257, 0.0f, 1.0f, 1.0f);
-    road_color(40,70);
-    road_color(40,71);
-    road_color(40,72);
-    road_color(40,73);
-    road_color(41,73);
-    road_color(42,73);
-    road_color(43,74);
-    road_color(44,75);
-    road_color(43,76);
-    road_color(44,76);
-    road_color(45,77);
-    road_color(46,78);
-    road_color(47,79);
-    road_color(47,80);
-    road_color(48,80);
+    town_color(start.x(), start.y(), 1.0f, 0.0f, 1.0f);
+    town_color(goal.x(), goal.y(), 0.0f, 1.0f, 1.0f);
 }
 
 void scene::town_color(int const x, int const y, float const R, float const G, float const B)
@@ -128,9 +116,17 @@ void scene::load_scene()
     int const Nu = 571;
     int const Nv = 346;
 
-    build_surface(Nu,Nv);
+    ivec2 start = {65,90};
+    ivec2 goal = {40,90};
 
-    display();
+    build_surface(Nu,Nv);
+    display(start, goal);
+
+    path path(Nv, Nu, start, goal);
+    path.A_star(surface);
+
+    for (int i = 0; i < path.data.size(); i++)
+        road_color(path.data[i].x(), path.data[i].y());
 
 
     surface.fill_normal();

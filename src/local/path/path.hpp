@@ -18,6 +18,7 @@
 #include <vector>
 #include <cmath>
 #include <array>
+#include <unordered_map>
 
 
 
@@ -26,34 +27,41 @@ class myWidgetGL;
 class path
 {
 public:
-    path(int const N, int const M);
-    void reconstruct_path(std::vector<cpe::ivec2> came_from, cpe::ivec2 current);
-    void add_vertex_to_path(cpe::ivec2 ij);
-    void pop_last_vertex_from_path();
-    void set_start(cpe::ivec2 b);
-    void set_goal(cpe::ivec2 e);
-    float h(cpe::ivec2 ij);
-    float g(cpe::ivec2 ij1, cpe::ivec2 ij2, int n, cpe::mesh_parametric surface);
+    path(int const N, int const M, cpe::ivec2 start, cpe::ivec2 goal);
 
-    int A_star(cpe::ivec2 start, cpe::ivec2 goal, cpe::mesh_parametric surface);
+    /** Fills data with the shortest path */
+    void reconstruct_path(std::vector<cpe::ivec2>& came_from, cpe::ivec2 current);
 
+    /** Heuristic function */ 
+    float h(cpe::ivec2 ij) const;
+    /** Cost function */
+    float g(cpe::ivec2 ij1, cpe::ivec2 ij2, int n, cpe::mesh_parametric surface) const;
 
+    /** Performs the A* algorithm */
+    int A_star(cpe::mesh_parametric surface);
+
+    /** data is a std::vector with ivec2 (i,j) inside */
+    std::vector<cpe::ivec2> data;
 
 
 private:
-    // data is a std::vector with ivec2 (i,j) inside
-    std::vector<cpe::ivec2> data;
-    std::array<cpe::ivec2,16> mask;
-    std::array<float,16> distance;
-    cpe::ivec2 start;
-    cpe::ivec2 goal;
+    /** World size */
     int N;
     int M;
-    std::vector<float> heuristics;
-    cpe::mesh_parametric surface;
-    
-    
 
+    /** Coordinates of the start and goal points */
+    cpe::ivec2 start;
+    cpe::ivec2 goal;
+
+    std::vector<float> g_score;
+    std::vector<float> f_score;
+
+    cpe::mesh_parametric surface;
+
+    std::array<float,16> distance;
+    std::array<cpe::ivec2,16> mask;
+
+    std::vector<float> heuristics;
 };
 
 #endif

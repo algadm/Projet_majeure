@@ -105,11 +105,14 @@ ivec2 operator-(ivec2 const& v);
 
 /** Comparaison < */
 // sorry but this is always true :)
-inline bool operator<(const ivec2& v1, const ivec2& v2) {
+inline bool operator<(const ivec2& v1, const ivec2& v2)
+{
     return true;
 }
 
 bool operator==(ivec2 const& v1, ivec2 const& v2);
+
+bool operator!=(ivec2 const& v1, ivec2 const& v2);
 
 
 // ********************************************* //
@@ -120,14 +123,6 @@ bool operator==(ivec2 const& v1, ivec2 const& v2);
 
 /** Output the vector in ostream as (x,y,z) */
 std::ostream& operator<<(std::ostream& stream,ivec2 const& p);
-
-
-
-
-
-
 }
-
-
 
 #endif

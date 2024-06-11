@@ -11,6 +11,7 @@
 
 #include "../../lib/3d/mat3.hpp"
 #include "../../lib/3d/vec3.hpp"
+#include "../../lib/3d/ivec2.hpp"
 #include "../../lib/mesh/mesh_parametric.hpp"
 #include "../../lib/opengl/mesh_opengl.hpp"
 #include "../../lib/interface/camera_matrices.hpp"
@@ -43,7 +44,7 @@ public:
     void load_common_data();
 
     /** Displays the elements of the A* algorithm */
-    void display();
+    void display(cpe::ivec2 const start, cpe::ivec2 const goal);
 
     /** Displays the color of the town */
     void town_color(int const x, int const y, float const R, float const G, float const B);
