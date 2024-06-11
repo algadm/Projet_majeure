@@ -102,12 +102,13 @@ ivec2 operator/(ivec2 const& v,int s);
 /** Unary negation */
 ivec2 operator-(ivec2 const& v);
 
-'''
+
 /** Comparaison < */
-inline bool operator<(const ivec2& v1, const ivec2& v2, std::array<float,int NM> f_score, int N) {
-    return (f_score[v1[0]*N+v1[1]] < f_score[v2[0]*N+v2[1]]);
+// sorry but this is always true :)
+inline bool operator<(const ivec2& v1, const ivec2& v2) {
+    return true;
 }
-'''
+
 bool operator==(ivec2 const& v1, ivec2 const& v2);
 
 
