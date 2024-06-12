@@ -28,7 +28,7 @@ river::river(int const n, int const m, float t, cpe::mesh_parametric s)
     for (int i = 0; i < m; i++){
         for (int j = 0; j < n; j++) {
             if (s.vertex(i,j).z() <= t) {
-                data[i*m+j] = 0;
+                data[i*n+j] = 1;
             }
         }
     }
@@ -41,10 +41,10 @@ void river::connected_components(int min_size)
     std::vector<int> dy = {0, 0, 1, -1};
     for (int i = 0; i < M; i++) {
         for (int j = 0; j < N; j++) {
-            if (data[i*M+j] != 0 && labels[i*M+j] == -1) {
-                queue<pair<int, int>> q;
+            if (data[i*N+j] != 0 && labels[i*N+j] == -1) {
+                std::queue<std::pair<int, int>> q;
                 q.push({i, j});
-                labels[i*M+j] = label;
+                labels[i*N+j] = label;
                 int component_size = 0;
 
                 while (!q.empty()) {
@@ -55,9 +55,9 @@ void river::connected_components(int min_size)
                     for (int d = 0; d < 4; ++d) {
                         int nx = cx + dx[d];
                         int ny = cy + dy[d];
-                        if (nx >= 0 && nx < M && ny >=0 && ny < N && data[nx*M+ny] != 0 && labels[nx*M+ny] == -1) {
+                        if (nx >= 0 && nx < M && ny >=0 && ny < N && data[nx*N+ny] != 0 && labels[nx*N+ny] == -1) {
                             q.push({nx, ny});
-                            labels[nx*M+ny] = label;
+                            labels[nx*N+ny] = label;
                         }
                     }
                 }
