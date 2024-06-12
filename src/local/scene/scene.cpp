@@ -56,7 +56,9 @@ void scene::build_surface(int const Nu, int const Nv, path& path)
             surface.vertex(ku, kv) = {x, y, z};
         }
     }
-    path.A_star(surface);
+    // path.A_star(surface);
+    
+    path.Dijkstra(surface);
     for (int ku = 0; ku < Nu; ++ku)
         for (int kv = 0; kv < Nv; ++kv)
             surface.vertex(ku, kv).z() *= .1f;

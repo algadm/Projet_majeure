@@ -43,6 +43,8 @@ public:
     /** data is a std::vector with ivec2 (i,j) inside */
     std::vector<cpe::ivec2> data;
 
+    int Dijkstra(cpe::mesh_parametric surface);
+
 
 private:
     /** World size */

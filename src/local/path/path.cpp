@@ -113,3 +113,44 @@ int path::A_star(cpe::mesh_parametric surface)
     }
     return 0;
 }
+
+int path::Dijkstra(cpe::mesh_parametric surface)
+{
+    std::vector<cpe::ivec2> came_from(N * M, cpe::ivec2(-1, -1));
+    std::vector<float> d;
+    std::vector<cpe::ivec2> Q;
+    for (int i = 0; i < M; i++) {
+        for (int j = 0; j < N; j++) {
+            d.push_back(std::numeric_limits<float>::infinity());
+            Q.push_back(ivec2(i,j));
+        }
+    }
+    d[start[0]*M+start[1]] = 0;
+    int len_Q = N*M;
+    float mini;
+    ivec2 sommet;
+    ivec2 neighbor;
+    while (len_Q > 0) {
+        mini = std::numeric_limits<float>::infinity();
+        for (int i = 0; i < M*N; i++) {
+            if (Q[i] != ivec2(-1,-1) && d[i] < mini) {
+                mini = d[i];
+                sommet = Q[i];
+            }
+        }
+        std::cout << "Current node: (" << sommet.x() << ", " << sommet.y() << ")\n";
+        Q[sommet[0]*N+sommet[1]] = ivec2(-1,-1);
+        len_Q -= 1;
+        for (int i = 0; i < 16; i++) {
+            neighbor = sommet + mask[i];
+            if (d[neighbor[0]*M+neighbor[1]] > d[sommet[0]*M+sommet[1] + distance[i]]) {
+                d[neighbor[0]*M+neighbor[1]] = d[sommet[0]*M+sommet[1] + distance[i]];
+                came_from[neighbor[0]*M+neighbor[1]] = sommet;
+            }
+        }
+
+    }
+    reconstruct_path(came_from, goal);
+    return 0;
+
+}
