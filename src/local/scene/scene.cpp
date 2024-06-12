@@ -57,7 +57,7 @@ void scene::build_surface(int const Nu, int const Nv, path& path)
         }
     }
     // path.A_star(surface);
-    
+
     path.Dijkstra(surface);
     for (int ku = 0; ku < Nu; ++ku)
         for (int kv = 0; kv < Nv; ++kv)

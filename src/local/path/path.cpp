@@ -64,9 +64,11 @@ float path::h(cpe::ivec2 ij) const
 }
 
 float path::g(cpe::ivec2 ij1, cpe::ivec2 ij2, int n, cpe::mesh_parametric surface) const
-{
-    float k = std::abs(surface.vertex(ij1.x(), ij1.y()).z() - surface.vertex(ij2.x(), ij2.y()).z()) / distance[n];
-    return k;
+{   
+    float height = std::abs(surface.vertex(ij1.x(), ij1.y()).z() - surface.vertex(ij2.x(), ij2.y()).z());
+    float k = height / distance[n];
+    
+    return (height*height + distance[n]*distance[n]) * std::exp(k);
 }
 
 int path::A_star(cpe::mesh_parametric surface)
@@ -115,42 +117,48 @@ int path::A_star(cpe::mesh_parametric surface)
 }
 
 int path::Dijkstra(cpe::mesh_parametric surface)
-{
+{   
     std::vector<cpe::ivec2> came_from(N * M, cpe::ivec2(-1, -1));
     std::vector<float> d;
-    std::vector<cpe::ivec2> Q;
+    std::priority_queue<std::pair<float, cpe::ivec2>, std::vector<std::pair<float, cpe::ivec2>>, CompareVec> priority_q;
+    priority_q.push({0.0f, start});
     for (int i = 0; i < M; i++) {
         for (int j = 0; j < N; j++) {
             d.push_back(std::numeric_limits<float>::infinity());
-            Q.push_back(ivec2(i,j));
         }
     }
     d[start[0]*M+start[1]] = 0;
-    int len_Q = N*M;
     float mini;
     ivec2 sommet;
+    ivec2 top_q_vertex;
     ivec2 neighbor;
-    while (len_Q > 0) {
-        mini = std::numeric_limits<float>::infinity();
-        for (int i = 0; i < M*N; i++) {
-            if (Q[i] != ivec2(-1,-1) && d[i] < mini) {
-                mini = d[i];
-                sommet = Q[i];
-            }
+    float tentative_score;
+    while (!priority_q.empty()) {
+        if (sommet == goal) {
+            reconstruct_path(came_from, goal);
+            return 1;
         }
-        std::cout << "Current node: (" << sommet.x() << ", " << sommet.y() << ")\n";
-        Q[sommet[0]*N+sommet[1]] = ivec2(-1,-1);
-        len_Q -= 1;
+        mini = std::numeric_limits<float>::infinity();
+        top_q_vertex = priority_q.top().second;
+        if (d[top_q_vertex[0]*M+top_q_vertex[1]] < mini) {
+            mini = d[top_q_vertex[0]*M+top_q_vertex[1]];
+            sommet = top_q_vertex;
+        }
+        std::cout << "Current node: (" << sommet[0] << ", " << sommet[1] << ")" << std::endl;
+        priority_q.pop();
         for (int i = 0; i < 16; i++) {
             neighbor = sommet + mask[i];
-            if (d[neighbor[0]*M+neighbor[1]] > d[sommet[0]*M+sommet[1] + distance[i]]) {
-                d[neighbor[0]*M+neighbor[1]] = d[sommet[0]*M+sommet[1] + distance[i]];
-                came_from[neighbor[0]*M+neighbor[1]] = sommet;
+            if (neighbor.x() >= 0 && neighbor.x() < N && neighbor.y() >= 0 && neighbor.y() < M) {
+                tentative_score = d[sommet[0]*M+sommet[1]] + g(sommet, neighbor, i, surface);
+                if (d[neighbor[0]*M+neighbor[1]] > tentative_score) {
+                    d[neighbor[0]*M+neighbor[1]] = tentative_score;
+                    came_from[neighbor[0]*M+neighbor[1]] = sommet;
+                    priority_q.push({tentative_score, neighbor});
+                }
             }
         }
 
     }
-    reconstruct_path(came_from, goal);
     return 0;
 
 }
