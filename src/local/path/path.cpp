@@ -122,11 +122,15 @@ int path::Dijkstra(cpe::mesh_parametric surface)
     std::vector<float> d;
     std::priority_queue<std::pair<float, cpe::ivec2>, std::vector<std::pair<float, cpe::ivec2>>, CompareVec> priority_q;
     priority_q.push({0.0f, start});
+    std::vector<bool> seen;
     for (int i = 0; i < M; i++) {
         for (int j = 0; j < N; j++) {
             d.push_back(std::numeric_limits<float>::infinity());
+            seen.push_back(false);
         }
     }
+    
+
     d[start[0]*M+start[1]] = 0;
     float mini;
     ivec2 sommet;
@@ -143,12 +147,13 @@ int path::Dijkstra(cpe::mesh_parametric surface)
         if (d[top_q_vertex[0]*M+top_q_vertex[1]] < mini) {
             mini = d[top_q_vertex[0]*M+top_q_vertex[1]];
             sommet = top_q_vertex;
+            seen[sommet[0]*M+sommet[1]] = true;
         }
         std::cout << "Current node: (" << sommet[0] << ", " << sommet[1] << ")" << std::endl;
         priority_q.pop();
         for (int i = 0; i < 16; i++) {
             neighbor = sommet + mask[i];
-            if (neighbor.x() >= 0 && neighbor.x() < N && neighbor.y() >= 0 && neighbor.y() < M) {
+            if (neighbor.x() >= 0 && neighbor.x() < N && neighbor.y() >= 0 && neighbor.y() < M && !seen[neighbor[0]*M+neighbor[1]]) {
                 tentative_score = d[sommet[0]*M+sommet[1]] + g(sommet, neighbor, i, surface);
                 if (d[neighbor[0]*M+neighbor[1]] > tentative_score) {
                     d[neighbor[0]*M+neighbor[1]] = tentative_score;
