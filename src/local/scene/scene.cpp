@@ -11,7 +11,6 @@
 #include "../../lib/interface/camera_matrices.hpp"
 
 #include "../interface/myWidgetGL.hpp"
-#include "../path/path.hpp"
 
 #include <cmath>
 
@@ -24,7 +23,7 @@
 using namespace cpe;
 
 
-void scene::build_surface(int const Nu, int const Nv)
+void scene::build_surface(int const Nu, int const Nv, path& path)
 {
     surface.set_plane_xy_unit(Nu,Nv);
 
@@ -53,14 +52,18 @@ void scene::build_surface(int const Nu, int const Nv)
 
             float const x = kv;
             float const y = ku;
-            float const z = .1f*height;
+            float const z = height;
             surface.vertex(ku, kv) = {x, y, z};
         }
     }
+    path.A_star(surface);
+    for (int ku = 0; ku < Nu; ++ku)
+        for (int kv = 0; kv < Nv; ++kv)
+            surface.vertex(ku, kv).z() *= .1f;
     surface.transform_apply_auto_scale_and_center();
 }
 
-void scene::display(ivec2 const start, ivec2 const goal)
+void scene::display(cpe::ivec2 const start, cpe::ivec2 const goal)
 {
     town_color(start.x(), start.y(), 1.0f, 0.0f, 1.0f);
     town_color(goal.x(), goal.y(), 0.0f, 1.0f, 1.0f);
@@ -116,14 +119,13 @@ void scene::load_scene()
     int const Nu = 571;
     int const Nv = 346;
 
-    ivec2 start = {65,90};
-    ivec2 goal = {40,90};
-
-    build_surface(Nu,Nv);
-    display(start, goal);
-
+    cpe::ivec2 const start = {40,70};
+    cpe::ivec2 const goal = {300,90};
+    
     path path(Nv, Nu, start, goal);
-    path.A_star(surface);
+
+    build_surface(Nu, Nv, path);
+    display(start, goal);
 
     for (int i = 0; i < path.data.size(); i++)
         road_color(path.data[i].x(), path.data[i].y());

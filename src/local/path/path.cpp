@@ -66,7 +66,6 @@ float path::h(cpe::ivec2 ij) const
 float path::g(cpe::ivec2 ij1, cpe::ivec2 ij2, int n, cpe::mesh_parametric surface) const
 {
     float k = std::abs(surface.vertex(ij1.x(), ij1.y()).z() - surface.vertex(ij2.x(), ij2.y()).z()) / distance[n];
-    k *= 5000.0f;
     return k;
 }
 

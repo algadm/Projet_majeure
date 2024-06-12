@@ -9,6 +9,7 @@
 //#include <GL/gl.h>
 #include <GL/glew.h>
 
+#include "../path/path.hpp"
 #include "../../lib/3d/mat3.hpp"
 #include "../../lib/3d/vec3.hpp"
 #include "../../lib/3d/ivec2.hpp"
@@ -28,7 +29,7 @@ public:
     scene();
 
     
-    void build_surface(int const Nu, int const Nv);
+    void build_surface(int const Nu, int const Nv, path& path);
 
 
     /** \brief Method called only once at the beginning (load off files ...) */
